@@ -7,6 +7,16 @@ Rails vanilla config is good enough, but tends to get messy. This gem provides a
 - Parse reasonable ENV values representing bools, ints, floats, and lists
 - Raise a helpful error when an ENV value appears to be unreasonable/unintentional
 
+You get these composable helpers:
+
+- `cred`
+- `env`
+- `prefix`
+- `bool`
+- `int`
+- `float`
+- `list`
+
 ## Synopsis
 
 ```ruby
