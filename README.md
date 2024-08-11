@@ -57,19 +57,19 @@ If bundler is not being used to manage dependencies, install the gem by executin
 
     If you don't set this credential, you will get an error:
 
-    ```ruby
+    ```
     Loadout::MissingConfigError: required credential (key_name) is not set
     ```
 
 3. Or from ENV:
 
-    ```ruby
+    ```
     config.key = env(:key_name)
     ```
 
     If you don't set this env, you will get an error:
 
-    ```ruby
+    ```
     Loadout::MissingConfigError: required environment variable (KEY_NAME) is not set
     ```
 
@@ -81,7 +81,7 @@ If bundler is not being used to manage dependencies, install the gem by executin
 
     If neither are set, you will get an error:
 
-    ```ruby
+    ```
     Loadout::MissingConfigError: required environment variable (KEY_NAME) or credential (key_name) is not set
     ```
 
@@ -118,7 +118,7 @@ If bundler is not being used to manage dependencies, install the gem by executin
 
     If you set an invalid value, you will get an error:
 
-    ```ruby
+    ```
     Loadout::InvalidConfigError: invalid value for bool (`value`) in KEY_NAME
     ```
 
