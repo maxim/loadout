@@ -355,6 +355,20 @@ class TestLoadout < Minitest::Test
     assert_equal "invalid value for int (`bad`) in #{ENV_KEY}", ex.message
   end
 
+  def test_int_considers_nil_value_invalid
+    env_stub = { 'INT' => nil }
+    @config1.loadout(env: env_stub)
+    @config2.loadout(env: env_stub)
+
+    ex = assert_raises(Loadout::InvalidConfigError) {
+      @config1.loadout.int.env(:int)
+    }
+    assert_equal 'invalid value for int (``) in INT', ex.message
+
+    ex = assert_raises(Loadout::InvalidConfigError) { @config2.int.env(:int) }
+    assert_equal 'invalid value for int (``) in INT', ex.message
+  end
+
   ##############################################################################
   # FLOAT TESTS                                                                #
   ##############################################################################
@@ -412,6 +426,22 @@ class TestLoadout < Minitest::Test
     assert_equal "invalid value for float (`bad`) in #{ENV_KEY}", ex.message
   end
 
+  def test_float_considers_nil_value_invalid
+    env_stub = { 'FLOAT' => nil }
+    @config1.loadout(env: env_stub)
+    @config2.loadout(env: env_stub)
+
+    ex = assert_raises(Loadout::InvalidConfigError) {
+      @config1.loadout.float.env(:float)
+    }
+    assert_equal 'invalid value for float (``) in FLOAT', ex.message
+
+    ex = assert_raises(Loadout::InvalidConfigError) {
+      @config2.float.env(:float)
+    }
+    assert_equal 'invalid value for float (``) in FLOAT', ex.message
+  end
+
   ##############################################################################
   # LIST TESTS                                                                 #
   ##############################################################################
@@ -461,6 +491,20 @@ class TestLoadout < Minitest::Test
   def test_list_does_not_raise_with_default
     assert_equal %w[a b c], @config1.loadout.list.env(ENV_SYM) { %w[a b c] }
     assert_equal %w[a b c], @config2.list.env(ENV_SYM) { %w[a b c] }
+  end
+
+  def test_list_considers_nil_value_invalid
+    env_stub = { 'LIST' => nil }
+    @config1.loadout(env: env_stub)
+    @config2.loadout(env: env_stub)
+
+    ex = assert_raises(Loadout::InvalidConfigError) {
+      @config1.loadout.list.env(:list)
+    }
+    assert_equal 'invalid value for list (``) in LIST', ex.message
+
+    ex = assert_raises(Loadout::InvalidConfigError) { @config2.list.env(:list) }
+    assert_equal 'invalid value for list (``) in LIST', ex.message
   end
 
   ##############################################################################

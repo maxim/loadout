@@ -115,41 +115,51 @@ module Loadout
 
     def coerce(key, value)
       case @type
-      in :bool
-        value = value.to_s
-        return false if value == ''
-        return false if %w[0 n no f false].include?(value.downcase)
-        return true  if %w[1 y yes t true].include?(value.downcase)
-        raise_invalid :bool, key, value
-      in :int; enhance_exception(:int, key, value) { Integer(value) }
-      in :float; enhance_exception(:float, key, value) { Float(value) }
-      in :list, sep; value.split(sep)
+      in :bool;      parse_bool(key, value)
+      in :int;       parse_int(key, value)
+      in :float;     parse_float(key, value)
+      in :list, sep; parse_list(key, value, sep)
       else; value
       end
     end
 
-    def enhance_exception(type, key, val)
-      yield
+    def parse_bool(key, value)
+      value = value.to_s
+      return false if value == ''
+      return false if %w[0 n no f false].include?(value.downcase)
+      return true  if %w[1 y yes t true].include?(value.downcase)
+      raise_invalid :bool, key, value
+    end
+
+    def parse_int(key, val)
+      Integer(val.to_s)
     rescue ArgumentError
-      raise_invalid(type, key, val)
+      raise_invalid :int, key, val
+    end
+
+    def parse_float(key, val)
+      Float(val.to_s)
+    rescue ArgumentError
+      raise_invalid :float, key, val
+    end
+
+    def parse_list(key, val, sep)
+      val = val.to_s
+      raise_invalid(:list, key, val) if val == ''
+      val.split(sep)
     end
 
     def raise_missing(keys)
-      src = []
-      val = []
+      pairs = []
 
       @lookup_list.each do |source|
         case source
-        when :cred
-          src << "credential"
-          val << keys.join('.')
-        when :env
-          src << "environment variable"
-          val << keys.join('_').upcase
+        when :cred; pairs << ["credential", keys.join('.')]
+        when :env;  pairs << ["environment variable", keys.join('_').upcase]
         end
       end
 
-      msg = src.zip(val).map { |s, v| "#{s} (#{v})" }.join(' or ')
+      msg = pairs.map { |s, v| "#{s} (#{v})" }.join(' or ')
       raise MissingConfigError, "required #{msg} is not set"
     end
 
