@@ -116,11 +116,15 @@ class TestLoadout < Minitest::Test
   end
 
   def test_env_raises_when_env_and_default_are_missing
-    ex = assert_raises(Loadout::ConfigError) { @config1.loadout.env(*ENV_SYMS) }
+    ex = assert_raises(Loadout::MissingConfigError) {
+      @config1.loadout.env(*ENV_SYMS)
+    }
     assert_equal "required environment variable (#{ENV_KEY}) is not set",
       ex.message
 
-    ex = assert_raises(Loadout::ConfigError) { @config2.env(*ENV_SYMS) }
+    ex = assert_raises(Loadout::MissingConfigError) {
+      @config2.env(*ENV_SYMS)
+    }
     assert_equal "required environment variable (#{ENV_KEY}) is not set",
       ex.message
   end
@@ -163,16 +167,14 @@ class TestLoadout < Minitest::Test
   end
 
   def test_prefix_shows_key_in_cred_error
-    ex = assert_raises(Loadout::ConfigError) {
+    ex = assert_raises(Loadout::MissingConfigError) {
       @config1.instance_eval { loadout.prefix(:foo) { loadout.cred(:bar) } }
     }
-
     assert_equal 'required credential (foo.bar) is not set', ex.message
 
-    ex = assert_raises(Loadout::ConfigError) {
+    ex = assert_raises(Loadout::MissingConfigError) {
       @config2.instance_eval { prefix(:foo) { cred(:bar) } }
     }
-
     assert_equal 'required credential (foo.bar) is not set', ex.message
   end
 
@@ -213,17 +215,15 @@ class TestLoadout < Minitest::Test
   end
 
   def test_prefix_shows_key_in_env_error
-    ex = assert_raises(Loadout::ConfigError) {
+    ex = assert_raises(Loadout::MissingConfigError) {
       @config1.instance_eval { loadout.prefix(:loadout) { loadout.env(:test) } }
     }
-
     assert_equal 'required environment variable (LOADOUT_TEST) is not set',
       ex.message
 
-    ex = assert_raises(Loadout::ConfigError) {
+    ex = assert_raises(Loadout::MissingConfigError) {
       @config2.instance_eval { prefix(:loadout) { env(:test) } }
     }
-
     assert_equal 'required environment variable (LOADOUT_TEST) is not set',
       ex.message
   end
@@ -250,14 +250,13 @@ class TestLoadout < Minitest::Test
   end
 
   def test_bool_raises_on_missing_key
-    ex = assert_raises(Loadout::ConfigError) {
+    ex = assert_raises(Loadout::MissingConfigError) {
       @config1.loadout.bool.env(ENV_SYM)
     }
-
     assert_equal "required environment variable (#{ENV_KEY}) is not set",
       ex.message
 
-    ex = assert_raises(Loadout::ConfigError) { @config2.bool.env(ENV_SYM) }
+    ex = assert_raises(Loadout::MissingConfigError) { @config2.bool.env(ENV_SYM) }
     assert_equal "required environment variable (#{ENV_KEY}) is not set",
       ex.message
   end
@@ -266,14 +265,15 @@ class TestLoadout < Minitest::Test
     ['bad', 'tr', '#'].each do |value|
       set_env value
 
-      ex = assert_raises(Loadout::ConfigError) {
+      ex = assert_raises(Loadout::InvalidConfigError) {
         @config1.loadout.bool.env(ENV_SYM)
       }
-
       assert_equal "invalid value for bool (`#{value}`) in #{ENV_KEY}",
         ex.message
 
-      ex = assert_raises(Loadout::ConfigError) { @config2.bool.env(ENV_SYM) }
+      ex = assert_raises(Loadout::InvalidConfigError) {
+        @config2.bool.env(ENV_SYM)
+      }
       assert_equal "invalid value for bool (`#{value}`) in #{ENV_KEY}",
         ex.message
     end
@@ -287,12 +287,12 @@ class TestLoadout < Minitest::Test
   def test_bool_raises_with_invalid_string_and_default
     set_env 'bad'
 
-    ex = assert_raises(Loadout::ConfigError) {
+    ex = assert_raises(Loadout::InvalidConfigError) {
       @config1.loadout.bool.env(ENV_SYM) { true }
     }
     assert_equal "invalid value for bool (`bad`) in #{ENV_KEY}", ex.message
 
-    ex = assert_raises(Loadout::ConfigError) {
+    ex = assert_raises(Loadout::InvalidConfigError) {
       @config2.bool.env(ENV_SYM) { true }
     }
     assert_equal "invalid value for bool (`bad`) in #{ENV_KEY}", ex.message
@@ -309,13 +309,15 @@ class TestLoadout < Minitest::Test
   end
 
   def test_int_raises_on_missing_key
-    ex = assert_raises(Loadout::ConfigError) {
+    ex = assert_raises(Loadout::MissingConfigError) {
       @config1.loadout.int.env(ENV_SYM)
     }
     assert_equal "required environment variable (#{ENV_KEY}) is not set",
       ex.message
 
-    ex = assert_raises(Loadout::ConfigError) { @config2.int.env(ENV_SYM) }
+    ex = assert_raises(Loadout::MissingConfigError) {
+      @config2.int.env(ENV_SYM)
+    }
     assert_equal "required environment variable (#{ENV_KEY}) is not set",
       ex.message
   end
@@ -323,12 +325,14 @@ class TestLoadout < Minitest::Test
   def test_int_raises_on_invalid_string
     set_env 'bad'
 
-    ex = assert_raises(Loadout::ConfigError) {
+    ex = assert_raises(Loadout::InvalidConfigError) {
       @config1.loadout.int.env(ENV_SYM)
     }
     assert_equal "invalid value for int (`bad`) in #{ENV_KEY}", ex.message
 
-    ex = assert_raises(Loadout::ConfigError) { @config2.int.env(ENV_SYM) }
+    ex = assert_raises(Loadout::InvalidConfigError) {
+      @config2.int.env(ENV_SYM)
+    }
     assert_equal "invalid value for int (`bad`) in #{ENV_KEY}", ex.message
   end
 
@@ -340,12 +344,14 @@ class TestLoadout < Minitest::Test
   def test_int_raises_with_invalid_string_and_default
     set_env 'bad'
 
-    ex = assert_raises(Loadout::ConfigError) {
+    ex = assert_raises(Loadout::InvalidConfigError) {
       @config1.loadout.int.env(ENV_SYM) { 42 }
     }
     assert_equal "invalid value for int (`bad`) in #{ENV_KEY}", ex.message
 
-    ex = assert_raises(Loadout::ConfigError) { @config2.int.env(ENV_SYM) { 42 } }
+    ex = assert_raises(Loadout::InvalidConfigError) {
+      @config2.int.env(ENV_SYM) { 42 }
+    }
     assert_equal "invalid value for int (`bad`) in #{ENV_KEY}", ex.message
   end
 
@@ -360,13 +366,15 @@ class TestLoadout < Minitest::Test
   end
 
   def test_float_raises_on_missing_key
-    ex = assert_raises(Loadout::ConfigError) {
+    ex = assert_raises(Loadout::MissingConfigError) {
       @config1.loadout.float.env(ENV_SYM)
     }
     assert_equal "required environment variable (#{ENV_KEY}) is not set",
       ex.message
 
-    ex = assert_raises(Loadout::ConfigError) { @config2.float.env(ENV_SYM) }
+    ex = assert_raises(Loadout::MissingConfigError) {
+      @config2.float.env(ENV_SYM)
+    }
     assert_equal "required environment variable (#{ENV_KEY}) is not set",
       ex.message
   end
@@ -374,12 +382,14 @@ class TestLoadout < Minitest::Test
   def test_float_raises_on_invalid_string
     set_env 'bad'
 
-    ex = assert_raises(Loadout::ConfigError) {
+    ex = assert_raises(Loadout::InvalidConfigError) {
       @config1.loadout.float.env(ENV_SYM)
     }
     assert_equal "invalid value for float (`bad`) in #{ENV_KEY}", ex.message
 
-    ex = assert_raises(Loadout::ConfigError) { @config2.float.env(ENV_SYM) }
+    ex = assert_raises(Loadout::InvalidConfigError) {
+      @config2.float.env(ENV_SYM)
+    }
     assert_equal "invalid value for float (`bad`) in #{ENV_KEY}", ex.message
   end
 
@@ -391,12 +401,14 @@ class TestLoadout < Minitest::Test
   def test_float_raises_with_invalid_string_and_default
     set_env 'bad'
 
-    ex = assert_raises(Loadout::ConfigError) {
+    ex = assert_raises(Loadout::InvalidConfigError) {
       @config1.loadout.float.env(ENV_SYM) { 3.14 }
     }
     assert_equal "invalid value for float (`bad`) in #{ENV_KEY}", ex.message
 
-    ex = assert_raises(Loadout::ConfigError) { @config2.float.env(ENV_SYM) { 3.14 } }
+    ex = assert_raises(Loadout::InvalidConfigError) {
+      @config2.float.env(ENV_SYM) { 3.14 }
+    }
     assert_equal "invalid value for float (`bad`) in #{ENV_KEY}", ex.message
   end
 
@@ -433,13 +445,15 @@ class TestLoadout < Minitest::Test
   end
 
   def test_list_raises_on_missing_key
-    ex = assert_raises(Loadout::ConfigError) {
+    ex = assert_raises(Loadout::MissingConfigError) {
       @config1.loadout.list.env(ENV_SYM)
     }
     assert_equal "required environment variable (#{ENV_KEY}) is not set",
       ex.message
 
-    ex = assert_raises(Loadout::ConfigError) { @config2.list.env(ENV_SYM) }
+    ex = assert_raises(Loadout::MissingConfigError) {
+      @config2.list.env(ENV_SYM)
+    }
     assert_equal "required environment variable (#{ENV_KEY}) is not set",
       ex.message
   end
