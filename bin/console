@@ -1,0 +1,16 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require 'bundler/setup'
+require 'loadout'
+require 'irb'
+
+config = Class.new.new.tap { _1.extend(Loadout::Helpers) }
+
+config.instance_eval do
+  loadout(env: $env = { 'VAR' => 'var' }, creds: $cred = { cred: 'cred' })
+
+  # You're inside the config. Call cred, env, or any other loadout helpers.
+  # Override $env or $cred to test different configurations.
+  binding.irb
+end
