@@ -32,26 +32,26 @@ module Loadout
 
   class Config
     protected attr_writer :type
-    protected attr_reader :lookup_stack
+    protected attr_reader :lookup_list
 
     def initialize(env, creds)
       @env = env
       @creds = creds
       @type = nil
       @prefix_stack = []
-      @lookup_stack = Set[]
+      @lookup_list = Set[]
       @prefix_default = NONE
     end
 
     def env(*keys, &default)
-      return dup.tap { _1.lookup_stack << :env } if keys.empty?
-      @lookup_stack << :env
+      return dup.tap { _1.lookup_list << :env } if keys.empty?
+      @lookup_list << :env
       lookup(keys, &default)
     end
 
     def cred(*keys, &default)
-      return dup.tap { _1.lookup_stack << :cred } if keys.empty?
-      @lookup_stack << :cred
+      return dup.tap { _1.lookup_list << :cred } if keys.empty?
+      @lookup_list << :cred
       lookup(keys, &default)
     end
 
@@ -68,9 +68,9 @@ module Loadout
 
     def initialize_dup(other)
       @creds          = other.instance_variable_get(:@creds)
-      @type           = other.instance_variable_get(:@type).dup
-      @prefix_stack   = other.instance_variable_get(:@prefix_stack).dup
-      @lookup_stack   = other.instance_variable_get(:@lookup_stack).dup
+      @type         = other.instance_variable_get(:@type).dup
+      @prefix_stack = other.instance_variable_get(:@prefix_stack).dup
+      @lookup_list  = other.instance_variable_get(:@lookup_list).dup
 
       unless other.instance_variable_get(:@prefix_default).equal?(NONE)
         @prefix_default = other.instance_variable_get(:@prefix_default).dup
@@ -85,7 +85,7 @@ module Loadout
       value = NONE
       keys = @prefix_stack.flatten + keys
 
-      @lookup_stack.each do |source|
+      @lookup_list.each do |source|
         value =
           case source
           when :cred; lookup_cred(keys)
@@ -99,7 +99,7 @@ module Loadout
       return @prefix_default.call unless @prefix_default.equal?(NONE)
       raise_missing(keys)
     ensure
-      @lookup_stack.clear
+      @lookup_list.clear
     end
 
     def lookup_cred(keys)
@@ -139,7 +139,7 @@ module Loadout
       src = []
       val = []
 
-      @lookup_stack.each do |source|
+      @lookup_list.each do |source|
         case source
         when :cred
           src << "credential"
