@@ -67,7 +67,6 @@ module Loadout
     def list(sep = DEFAULT_LIST_SEP) = dup.tap { _1.type = [:list, sep] }
 
     def initialize_dup(other)
-      @creds          = other.instance_variable_get(:@creds)
       @type         = other.instance_variable_get(:@type).dup
       @prefix_stack = other.instance_variable_get(:@prefix_stack).dup
       @lookup_list  = other.instance_variable_get(:@lookup_list).dup
