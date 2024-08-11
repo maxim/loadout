@@ -3,8 +3,9 @@
 Rails vanilla config is good enough, but tends to get messy. This gem provides a few helpers to
 
 - Reduce repetition
-- Raise error when required ENV vars or credentials are unset
-- Parse reasonable ENV values into booleans, integers, floats, and arrays
+- Raise a helpful error when required values are not set
+- Parse reasonable ENV values representing bools, ints, floats, and lists
+- Raise a helpful error when an ENV value appears to be unreasonable/unintentional
 
 ## Synopsis
 
@@ -16,13 +17,13 @@ Rails.application.configure do
   config.value_from_env_or_cred = env.cred(:key_name)
 
   prefix(:service) do
-    config.x.service.optional_string = env.cred(:api_key) { 'default_key' }
+    config.x.service.optional_string = env.cred(:api_key) { 'default' }
     config.x.service.required_string = env.cred(:api_secret)
 
-    config.x.service.optional_bool   = bool.env(:bool_flag) { false }
-    config.x.service.number          = int.env.cred(:number) { nil }
-    config.x.service.float           = float.env.cred(:number)
-    config.x.service.array           = list.env(:comma_list)
+    config.x.service.optional_bool = bool.env(:bool_flag) { false }
+    config.x.service.optional_int  = int.env.cred(:number) { nil }
+    config.x.service.float         = float.env.cred(:number)
+    config.x.service.array         = list.env(:comma_list)
   end
 end
 ```
