@@ -55,16 +55,34 @@ If bundler is not being used to manage dependencies, install the gem by executin
     config.key = cred(:key_name)
     ```
 
+    If you don't set this credential, you will get an error:
+
+    ```ruby
+    Loadout::MissingConfigError: required credential (key_name) is not set
+    ```
+
 3. Or from ENV:
 
     ```ruby
     config.key = env(:key_name)
     ```
 
-4. Or whichever one is found first:
+    If you don't set this env, you will get an error:
+
+    ```ruby
+    Loadout::MissingConfigError: required environment variable (KEY_NAME) is not set
+    ```
+
+4. Look up ENV, then credentials, then fail:
 
     ```ruby
     config.key = env.cred(:key_name)
+    ```
+
+    If neither are set, you will get an error:
+
+    ```ruby
+    Loadout::MissingConfigError: required environment variable (KEY_NAME) or credential (key_name) is not set
     ```
 
 5. Or the other way around:
@@ -98,6 +116,12 @@ If bundler is not being used to manage dependencies, install the gem by executin
     config.some_flag = bool.cred.env(:key_name)
     ```
 
+    If you set an invalid value, you will get an error:
+
+    ```ruby
+    Loadout::InvalidConfigError: invalid value for bool (`value`) in KEY_NAME
+    ```
+
     Note: because credentials come from YAML, they don't need to be parsed. Only ENV values are parsed.
 
 9. Integers and floats are also supported:
@@ -117,7 +141,7 @@ If bundler is not being used to manage dependencies, install the gem by executin
 11. You can set your own list separator (string or regex):
 
     ```ruby
-    # Parses 'foo0bar0baz' as ['foo', 'bar', 'baz']
+    # Parses 'foo0bar0baz' into ['foo', 'bar', 'baz']
     config.some_list = list('0').env(:key_name)
     ```
 
