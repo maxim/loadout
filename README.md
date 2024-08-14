@@ -51,7 +51,7 @@ If bundler is not being used to manage dependencies, install the gem by executin
 
 ## Usage
 
-1. Include helpers into your `config/application.rb` and `config/environments/*.rb`:
+1. Include helpers into your `config/environments/*.rb`:
 
     ```ruby
     extend Loadout::Helpers
@@ -172,29 +172,7 @@ If bundler is not being used to manage dependencies, install the gem by executin
 
     Note that left hand side is unaffected. Only loadout helpers get auto-prefixed.
 
-14. If you'd like a way to shorten the left hand side too, you can assign the whole group as a hash or OrderedOptions (this is not a loadout feature, just something you can do with Rails):
-
-    ```ruby
-    prefix(:service) do
-      config.x.service = ActiveSupport::OrderedOptions[
-        api_key:    env(:api_key),
-        api_secret: env(:api_secret)
-      ]
-    end
-    ```
-
-15. Since `prefix` returns the block's result, you can rewrite the above as follows: 
-
-    ```ruby
-    config.x.service = prefix(:service) {
-      ActiveSupport::OrderedOptions[
-        api_key:    env(:api_key),
-        api_secret: env(:api_secret)
-      ]
-    }
-    ```
-
-16. `prefix` lets you supply a default to the whole block:
+14. `prefix` lets you supply a default to the whole block:
 
     ```ruby
     prefix(:service, default: -> { 'SECRET' }) do
@@ -241,6 +219,104 @@ Rails.application.configure do
 end
 ```
 
+## Tips and Tricks
+
+### What should I put in `application.rb`?
+
+All your environments load `application.rb` as their dependency. That's why you should not put any hard requirements (`env` or `cred`) into application.rb. It would make all dependent environments crash unless every single env and cred is provided. And you will not be able to override these requirements, because ruby parses application.rb first.
+
+```ruby
+# application.rb
+config.some_secret = env(:some_secret)
+```
+
+```ruby
+# test.rb (BAD, DOESN'T WORK)
+config.some_secret = cred(:some_secret) { 'secret' } # <= ruby will not get here
+```
+
+Ruby will never get to test.rb, because application.rb will crash when it can't find `ENV['SOME_SECRET']`.
+
+My recommended approach is to put only defaults and nils in your application.rb. Assign only literal values so that you have a comprehensive list of every supported configuration in one place. Then you can add stricter requirements (via helpers like `env` and `cred`) to your actual environment files.
+
+```ruby
+# application.rb
+config.some_secret = 'default'
+```
+
+```ruby
+# development.rb
+config.some_secret = cred(:some_secret)
+```
+
+```ruby
+# test.rb (cred for VCR recording, default otherwise)
+config.some_secret = cred(:some_secret) { 'secret' }
+```
+
+```ruby
+# production.rb
+config.some_secret = env(:some_secret)
+```
+
+This will work.
+
+
+### What if one environment depends on another?
+
+If you have [dependencies between environment files](https://signalvnoise.com/posts/3535-beyond-the-default-rails-environments), for example your staging.rb depends on your production.rb, and has relaxed requirements compared to production, here's a trick you can use.
+
+```ruby
+# production.rb
+config.some_secret = env(:some_secret) if Rails.env.production?
+```
+
+```ruby
+# staging.rb
+config.some_secret = env(:some_secret) { 'default' }
+```
+
+Note the condition in production.rb. Now you are requriing `ENV['SOME_SECRET']` in production, while allowing a default in staging.
+
+
+### Cleaning up nested settings
+
+Here are some examples on how you can make nested config settings look neat.
+
+**Use `tap` for literals**
+
+```ruby
+config.x.service.tap do |service|
+  service.api_key    = 'key'
+  service.api_secret = 'secret'
+  service.api_url    = 'https://api.example.com'
+end
+```
+
+**Use local variable with `prefix`**
+
+```ruby
+prefix(:service) do
+  service            = config.x.service
+  service.api_key    = env(:api_key)
+  service.api_secret = env(:api_secret)
+  service.api_url    = env(:api_url)
+end
+```
+
+**Use `OrderedOptions` with `prefix`**
+
+Be careful, this overwrites the whole service config.
+
+```ruby
+config.x.service = prefix(:service) do
+  ActiveSupport::OrderedOptions[
+    api_key:    env(:api_key),
+    api_secret: env(:api_secret),
+    api_url:    env(:api_url)
+  ]
+end
+```
 
 ## Development
 
