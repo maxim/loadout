@@ -27,12 +27,14 @@ Rails.application.configure do
   config.value_from_env_or_cred = env.cred(:key_name)
 
   prefix(:service) do
-    config.x.service.optional_value = env.cred(:api_key) { 'default' }
-    config.x.service.required_value = env.cred(:api_secret)
-    config.x.service.optional_bool  = bool.env(:bool_flag) { false }
-    config.x.service.optional_int   = int.env.cred(:some_int) { nil }
-    config.x.service.required_float = float.env.cred(:some_float)
-    config.x.service.required_array = list.env(:comma_list)
+    service = config.x.service
+
+    service.optional_value = env.cred(:api_key) { 'default' }
+    service.required_value = env.cred(:api_secret)
+    service.optional_bool  = bool.env(:bool_flag) { false }
+    service.optional_int   = int.env.cred(:some_int) { nil }
+    service.required_float = float.env.cred(:some_float)
+    service.required_array = list.env(:comma_list)
   end
 end
 ```
